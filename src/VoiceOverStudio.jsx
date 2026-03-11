@@ -1,25 +1,25 @@
 import { useState, useRef, useCallback } from "react";
 
 const SAMPLE_SENTENCES = [
-  "I spent twenty years as a dementia carer, and I built this platform because nothing else existed.",
-  "Memory Mirror is a care platform designed for people living with dementia and the families who love them.",
-  "Six AI companions, hands-free voice, and twelve features — all in one place at memory-mirror.app.",
-  "This was built by a carer, for carers. From Melton, Victoria, reaching families in twenty-eight countries.",
-  "Try it free today — no credit card, no commitment. Just go to memory-mirror.app.",
+  "VoiceOver Studio lets you clone your voice and create professional audio in minutes.",
+  "Record five short samples, and our AI will capture every nuance of your unique voice.",
+  "Powered by ElevenLabs, VoiceOver Studio delivers broadcast-quality voiceovers at the touch of a button.",
+  "Choose from ready-made scripts or write your own, then download your voiceover as an MP3.",
+  "Try VoiceOver Studio free today — no credit card required, just your voice and a great idea.",
 ];
 
 const MARKETING_SCRIPTS = [
   {
     label: "60-Second Ad",
-    text: `Twenty years ago, I became a carer for someone I loved who had dementia. And I discovered something every carer discovers — there is almost nothing out there to help you. So I built it myself. MM AI is a unified care platform with six AI companions, hands-free voice, a shower guide, phone contacts, photo albums, and so much more. It's reached carers in twenty-eight countries — with zero advertising. Just carers finding it and sharing it with other carers. Because when something genuinely helps, people tell the people they love. Try it free today at memory-mirror.app.`,
+    text: `What if creating a professional voiceover was as simple as speaking five sentences? With VoiceOver Studio, it is. Our tool, powered by ElevenLabs, clones your voice from just a handful of recordings — capturing your tone, your warmth, your personality. Then pick one of our pre-written marketing scripts or craft your own, and generate a broadcast-quality voiceover in seconds. Download it as an MP3, drop it into your video, your podcast, your social ad — and sound like a pro every single time. No studio. No expensive voice talent. No complicated software. Just your voice, your message, and the world. Try VoiceOver Studio free today.`,
   },
   {
     label: "30-Second Ad",
-    text: `If you care for someone with dementia, I built this for you. MM AI gives your loved one a warm AI companion — always available, always patient, never tired. Hands-free voice. Step-by-step shower guide. Family phone contacts. All at memory-mirror.app. Free to try. No credit card needed.`,
+    text: `Your voice is your brand. VoiceOver Studio lets you clone it once and use it forever. Powered by ElevenLabs, our platform captures your unique voice from just five short recordings — then generates professional-quality voiceovers from any script in seconds. Download as MP3, drop it into your content, and sound like a pro — every time. Try VoiceOver Studio free today.`,
   },
   {
     label: "15-Second Reel",
-    text: `Twenty years as a dementia carer. Zero tech background. One burning question — why is there nothing to help us? So I built it. MM AI. Free to try at memory-mirror.app.`,
+    text: `Professional voiceovers in seconds. Clone your voice with five recordings. Pick a script. Hit generate. Download your MP3. That's VoiceOver Studio — free to try today.`,
   },
   {
     label: "Custom Script",
