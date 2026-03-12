@@ -74,11 +74,13 @@ export default function VoiceOverStudio() {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      const supportedTypes = ["audio/webm", "audio/ogg", "audio/mp4", "audio/wav"];
+      const mimeType = supportedTypes.find(t => MediaRecorder.isTypeSupported(t)) || "";
+      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       chunksRef.current = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
         setRecordings(r => ({ ...r, [currentSample]: blob }));
         stream.getTracks().forEach(t => t.stop());
       };
@@ -254,4 +256,137 @@ export default function VoiceOverStudio() {
         </div>
         <div style={{ ...S.card, border: "2px solid #1B5E2044", textAlign: "center" }}>
           <div style={{ color: "#74C69D", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Read this sentence clearly and naturally:</div>
-          <p style={{ color: "#fff", fontSize: 18, lineHeight: 1.8, fontStyle: "italic", margin: 0 }}>\
+          <p style={{ color: "#fff", fontSize: 18, lineHeight: 1.8, fontStyle: "italic", margin: 0 }}>
+            "{SAMPLE_SENTENCES[currentSample]}"
+          </p>
+        </div>
+
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          {isRecording ? (
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 88, height: 88, borderRadius: "50%", background: "#c0392b44", animation: "ripple 1.5s ease-out infinite" }} />
+              <button
+                onClick={stopRecording}
+                style={{ ...S.btn("#c0392b"), borderRadius: "50%", width: 80, height: 80, fontSize: 28, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", animation: "pulse 1s ease-in-out infinite" }}
+              >⏹️</button>
+            </div>
+          ) : (
+            <button
+              onClick={startRecording}
+              style={{ ...S.btn("#c0392b"), borderRadius: "50%", width: 80, height: 80, fontSize: 32, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+            >🎙️</button>
+          )}
+          <div style={{ color: isRecording ? "#ef5350" : "#667", fontSize: 13, marginTop: 10 }}>
+            {isRecording
+              ? `Recording… ${fmt(recordingTime)}`
+              : recordings[currentSample]
+                ? "✅ Recorded — tap 🎙️ to re-record"
+                : "Tap 🎙️ to start recording"}
+          </div>
+        </div>
+
+        {recordings[currentSample] && !isRecording && (
+          <div style={{ ...S.card }}>
+            <div style={S.label}>Playback</div>
+            <audio controls src={URL.createObjectURL(recordings[currentSample])} style={{ width: "100%" }} />
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          {currentSample > 0 && (
+            <button
+              onClick={() => { if (!isRecording) setCurrentSample(s => s - 1); }}
+              style={{ ...S.btn("#1A5276", true), flex: 1 }}
+            >← Previous</button>
+          )}
+          {recordings[currentSample] && !isRecording && currentSample < SAMPLE_SENTENCES.length - 1 && (
+            <button
+              onClick={() => setCurrentSample(s => s + 1)}
+              style={{ ...S.btn(), flex: 1 }}
+            >Next Sample →</button>
+          )}
+        </div>
+
+        {allRecorded && !isRecording && (
+          <div style={{ ...S.card, textAlign: "center" }}>
+            <div style={{ color: "#74C69D", fontSize: 14, marginBottom: 12 }}>✅ All 5 samples recorded! Ready to clone your voice.</div>
+            <button onClick={cloneVoice} disabled={cloningLoading} style={{ ...S.btn(), width: "100%" }}>
+              {cloningLoading ? "Cloning…" : "🧬 Clone My Voice →"}
+            </button>
+            {cloningStatus && (
+              <div style={{ color: cloningStatus.startsWith("Error") ? "#ef5350" : "#74C69D", fontSize: 13, marginTop: 10 }}>{cloningStatus}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (screen === "generate") return (
+    <div style={S.app}>
+      <div style={S.header}>
+        <button onClick={() => setScreen(clonedVoiceId ? "record" : "home")} style={{ background: "none", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div>
+          <div style={{ fontFamily: "Arial,sans-serif", fontSize: 18, fontWeight: 900 }}>Generate Voiceover</div>
+          <div style={{ color: "#74C69D", fontSize: 12 }}>Powered by ElevenLabs</div>
+        </div>
+      </div>
+      <div style={{ padding: "24px 20px", maxWidth: 560, margin: "0 auto" }}>
+        <div style={S.card}>
+          <span style={S.label}>Choose a Script</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+            {MARKETING_SCRIPTS.map((s, i) => (
+              <button key={i} onClick={() => setSelectedScript(i)} style={{ ...S.btn(i === selectedScript ? "#1B5E20" : "#1e3050", i !== selectedScript), padding: "8px 16px", fontSize: 13 }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          {selectedScript === 3 ? (
+            <textarea
+              value={customScript}
+              onChange={e => setCustomScript(e.target.value)}
+              placeholder="Write your custom script here…"
+              rows={6}
+              style={{ ...S.input, resize: "vertical" }}
+            />
+          ) : (
+            <div style={{ background: "#080f1e", border: "1px solid #1e3050", borderRadius: 12, padding: "13px 16px", color: "#aaa", fontSize: 14, lineHeight: 1.7 }}>
+              {MARKETING_SCRIPTS[selectedScript].text}
+            </div>
+          )}
+        </div>
+        {generateError && <div style={S.error}>{generateError}</div>}
+        <button onClick={generateVoiceover} disabled={generating} style={{ ...S.btn(), width: "100%", marginTop: 4 }}>
+          {generating ? "Generating…" : "🎬 Generate Voiceover →"}
+        </button>
+      </div>
+    </div>
+  );
+
+  if (screen === "result") return (
+    <div style={S.app}>
+      <div style={S.header}>
+        <button onClick={() => setScreen("generate")} style={{ background: "none", border: "none", color: "#fff", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div>
+          <div style={{ fontFamily: "Arial,sans-serif", fontSize: 18, fontWeight: 900 }}>Your Voiceover</div>
+          <div style={{ color: "#74C69D", fontSize: 12 }}>Ready to download</div>
+        </div>
+      </div>
+      <div style={{ padding: "24px 20px", maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ ...S.card, textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+          <div style={{ color: "#74C69D", fontSize: 16, marginBottom: 16 }}>Your voiceover is ready!</div>
+          <audio controls src={audioUrl} style={{ width: "100%", marginBottom: 16 }} />
+          <a href={audioUrl} download="voiceover.mp3" style={{ ...S.btn(), display: "inline-block", textDecoration: "none", textAlign: "center" }}>
+            ⬇️ Download MP3
+          </a>
+        </div>
+        <button onClick={() => { setScreen("generate"); setAudioUrl(""); }} style={{ ...S.btn("#1A5276", true), width: "100%", marginTop: 8 }}>
+          ← Generate Another
+        </button>
+      </div>
+    </div>
+  );
+
+  return null;
+}
