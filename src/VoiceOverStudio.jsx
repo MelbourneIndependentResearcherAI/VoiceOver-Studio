@@ -82,9 +82,11 @@ export default function VoiceOverStudio() {
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
         setRecordings(r => ({ ...r, [currentSample]: blob }));
+        setIsRecording(false);
+        setRecordingTime(0);
         stream.getTracks().forEach(t => t.stop());
       };
-      mr.start();
+      mr.start(100);
       mediaRecorderRef.current = mr;
       setIsRecording(true);
       setRecordingTime(0);
@@ -95,10 +97,14 @@ export default function VoiceOverStudio() {
   }, [currentSample]);
 
   const stopRecording = useCallback(() => {
-    mediaRecorderRef.current?.stop();
+    const mr = mediaRecorderRef.current;
+    if (mr && mr.state !== "inactive") {
+      mr.stop();
+    } else {
+      setIsRecording(false);
+      setRecordingTime(0);
+    }
     clearInterval(timerRef.current);
-    setIsRecording(false);
-    setRecordingTime(0);
   }, []);
 
   const allRecorded = SAMPLE_SENTENCES.every((_, i) => recordings[i]);
@@ -264,10 +270,10 @@ export default function VoiceOverStudio() {
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           {isRecording ? (
             <div style={{ position: "relative", display: "inline-block" }}>
-              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 88, height: 88, borderRadius: "50%", background: "#c0392b44", animation: "ripple 1.5s ease-out infinite" }} />
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 88, height: 88, borderRadius: "50%", background: "#c0392b44", animation: "ripple 1.5s ease-out infinite", pointerEvents: "none" }} />
               <button
                 onClick={stopRecording}
-                style={{ ...S.btn("#c0392b"), borderRadius: "50%", width: 80, height: 80, fontSize: 28, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", animation: "pulse 1s ease-in-out infinite" }}
+                style={{ ...S.btn("#c0392b"), borderRadius: "50%", width: 80, height: 80, fontSize: 28, padding: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", animation: "pulse 1s ease-in-out infinite", position: "relative", zIndex: 1 }}
               >⏹️</button>
             </div>
           ) : (
